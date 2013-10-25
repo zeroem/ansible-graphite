@@ -1,0 +1,57 @@
+- name: system requirements
+  apt: pkg={{ item }} state=latest
+  sudo: yes
+  with_items: system_packages
+
+- file: state=directory path={{ target_dir }}/{{ item }}
+  with_items: [ "{{ graphite_install_dir }}", "{{ graphite_repos_dir }}" ]
+
+- name: download graphite packages
+  git: repo=https://github.com/graphite-project/{{ item }}
+       version={{ graphite_version }}
+       dest={{ graphite_repos_dir }}/{{ item }}
+       depth=1
+  with_items: graphite_packages
+
+- name: workaround for network blocking git://
+  command: sed -i -e "s/git+git/git+https/" {{ graphite_repos_dir }}/{{ item }}/requirements.txt
+  with_items: graphite_packages
+
+- name: install graphite deps
+  pip: requirements={{ graphite_repos_dir }}/{{ item }}/requirements.txt
+       virtualenv={{ graphite_virtualenv }}
+  with_items: graphite_packages
+
+- name: set install dir
+  lineinfile: dest={{ graphite_repos_dir }}/{{ item }}/setup.cfg
+               state=present
+               regexp=^prefix.*
+               line=prefix={{ graphite_install_dir }}
+               backup=yes
+  when: item != "ceres"
+  with_items: graphite_packages
+
+- name: setup graphite apps
+  command: chdir={{graphite_repos_dir }}/{{ item }}
+           {{ graphite_python }} setup.py build install
+  with_items: graphite_packages
+
+- name: copy example confs to main conf
+  command: chdir={{ graphite_install_dir }}/conf
+           creates={{ graphite_install_dir }}/conf/{{ item }} 
+           cp {{ item }}.example {{ item }}
+  with_items: graphite_carbon_conf_files
+
+- name: change sqlite storage location
+  lineinfile: >
+    dest={{ graphite_install_dir }}/webapp/graphite/settings.py
+    state=present
+    regexp=\'NAME\':\\s+\'/opt
+    line="'NAME': '{{ graphite_install_dir }}/storage/graphite_db',"
+    backup=yes
+
+- name: setup sqlite
+  command: chdir={{ graphite_install_dir }}/webapp/graphite
+           {{ graphite_python }} manage.py syncdb --noinput
+  environment:
+    PYTHONPATH: "{{ graphite_install_dir }}/webapp"
