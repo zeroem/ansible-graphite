@@ -1,0 +1,21 @@
+---
+- name: copy example confs to main conf
+  command: chdir={{ graphite_target_dir }}/conf
+           creates={{ graphite_target_dir }}/conf/{{ item }} 
+           cp {{ item }}.example {{ item }}
+  with_items: graphite_carbon_conf_files
+
+- name: change sqlite storage location
+  lineinfile: >
+    dest={{ graphite_target_dir }}/webapp/graphite/settings.py
+    state=present
+    regexp=\'NAME\':\\s+\'
+    line="'NAME': '{{ graphite_target_dir }}/storage/graphite_db',"
+    backup=yes
+
+- name: setup sqlite
+  command: chdir={{ graphite_target_dir }}/webapp/graphite
+           {{ graphite_python }} manage.py syncdb --noinput
+  environment:
+    PYTHONPATH: "{{ graphite_target_dir }}/webapp"
+

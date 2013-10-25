@@ -1,0 +1,4 @@
+---
+graphite_carbon_conf_files:
+  - carbon.conf
+  - storage-schemas.conf
