@@ -1,0 +1,6 @@
+---
+system_packages:
+  - libcairo2-dev
+  - python-cairo
+  - python-rrdtool
+  - memcached

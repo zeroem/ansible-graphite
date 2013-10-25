@@ -14,9 +14,3 @@ graphite_packages:
   - carbon
   - ceres
 
-system_packages:
-  - libcairo2-dev
-  - python-cairo
-  - python-rrdtool
-  - memcached
-

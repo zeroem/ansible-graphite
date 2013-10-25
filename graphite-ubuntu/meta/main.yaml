@@ -1,0 +1,4 @@
+---
+dependencies:
+  - { role: "graphite-ubuntu-reqs" }
+  - { role: "graphite-common" }

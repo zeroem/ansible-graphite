@@ -1,9 +1,4 @@
 ---
-- name: system requirements
-  apt: pkg={{ item }} state=latest
-  sudo: yes
-  with_items: system_packages
-
 - file: state=directory path={{ graphite_target_dir }}/{{ item }}
   with_items: [ "{{ graphite_target_dir }}", "{{ graphite_repos_dir }}" ]
 

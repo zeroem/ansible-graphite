@@ -1,0 +1,6 @@
+---
+- name: system requirements
+  apt: pkg={{ item }} state=latest
+  sudo: yes
+  with_items: system_packages
+
